@@ -1,5 +1,5 @@
-db218a982aad6c0b2374ef37ba0630d4 *DESCRIPTION
-b506e9dd9da42ab2aaa7f414e356c670 *NAMESPACE
+47e590ce06513982886debdbf00911fa *DESCRIPTION
+7433264a575439851264befcbe2608b6 *NAMESPACE
 a9be5fc9141fe1ebad2656dde59721d5 *R/RcppExports.R
 7282d92fe8c04877bcaabddd1d78d433 *R/gsynth.R
 1e01547b5dac4ea7e4d477d32ee57936 *R/interFE.R
@@ -18,4 +18,4 @@ d526d8a88aa543af671b67cadfb701be *man/simdata.Rd
 8d46d69896a1f1d31ed76035a0e49d67 *src/Makevars.win
 c997caf339aa28522be3737c3684616e *src/RcppExports.cpp
 7c154becda98d9454c8720b0d5f9d23d *src/gsynth_init.c
-8e5991e18cdd0211e9e1a035a4c46baa *src/interFE.cpp
+2c1b8ade1e0ca2bdb05625fb4c963a73 *src/interFE.cpp

@@ -1,5 +1,5 @@
 useDynLib(gsynth, .registration=TRUE)
-exportPattern("^[[:alpha:]]+")
+##exportPattern("^[[:alpha:]]+")
 importFrom(Rcpp, evalCpp)
 importFrom("stats", "na.omit", "quantile", "sd", "var")
 importFrom("foreach","foreach","%dopar%")
