@@ -1,5 +1,6 @@
 # include <RcppArmadillo.h>
 // [[Rcpp::depends(RcppArmadillo)]]
+// [[Rcpp::plugins(cpp11)]]
 
 using namespace Rcpp ;
 
@@ -184,7 +185,7 @@ List panel_factor (arma::mat E, int r) {
   int N = E.n_cols ;
   arma::mat factor(T, r) ;
   arma::mat lambda(N, r) ;
-  arma::mat FE ;
+  arma::mat FE (T, N, arma::fill::zeros) ;
   arma::mat VNT(r, r) ;
   arma::mat U ;
   arma::vec s ;
@@ -192,14 +193,14 @@ List panel_factor (arma::mat E, int r) {
   if (T < N) { 
     arma::mat EE = E * E.t() /(N * T) ;
     arma::svd( U, s, V, EE) ;
-    factor = U.head_cols(r) * sqrt(T) ;
+    factor = U.head_cols(r) * sqrt(double(T)) ;
     lambda = E.t() * factor/T ;
     VNT = diagmat(s.head_rows(r)) ;
   } 
   else {
     arma::mat EE = E.t() * E / (N * T) ;
     svd(U, s, V, EE) ;
-    lambda = U.head_cols(r) * sqrt(N) ;
+    lambda = U.head_cols(r) * sqrt(double(N)) ;
     factor = E * lambda / N ;
     VNT = diagmat(s.head_rows(r)) ;
   }
@@ -270,11 +271,16 @@ List beta_iter (arma::cube X,
      V: the eigenvalues matrix
      e: estimated residuals
      niter: number of interations to achieve convergence */
-  
   int p = X.n_slices ;
+  int b_r = beta0.n_rows ; 
   double beta_norm = 1.0 ;
-  arma::mat beta = beta0 ;
-  arma::mat beta_old(p, 1) ;
+  arma::mat beta ;
+  if (b_r != p) {
+      beta.zeros(p, 1) ;
+  } else {
+      beta = beta0 ;
+  }
+  arma::mat beta_old = beta ;
   arma::mat VNT(r, r) ;
   arma::mat FE ;
 
@@ -327,9 +333,15 @@ List beta_iter_ub (arma::cube X,
                    double tolerate,
                    arma::mat beta0) { 
   int p = X.n_slices ;
+  int b_r = beta0.n_rows ; 
   double beta_norm = 1.0 ;
-  arma::mat beta = beta0 ;
-  arma::mat beta_old(p, 1) ;
+  arma::mat beta ;
+  if (b_r != p) {
+      beta.zeros(p, 1) ;
+  } else {
+      beta = beta0 ;
+  }
+  arma::mat beta_old = beta ;  
   arma::mat VNT(r, r) ;
   arma::mat FE ;
   arma::mat FE_use ;
@@ -390,6 +402,7 @@ List inter_fe (arma::mat Y,
                double tol = 1e-5
                ) { 
   /* Dimensions */
+  int b_r = beta0.n_rows ; 
   int T = Y.n_rows ;
   int N = Y.n_cols ;
   int p = X.n_slices ;
@@ -398,7 +411,7 @@ List inter_fe (arma::mat Y,
   arma::mat factor ;
   arma::mat lambda ;
   arma::mat VNT ;
-  arma::mat beta(p, 1, arma::fill::zeros) ; 
+  arma::mat beta ; 
   arma::mat U ;
   double mu ;
   double mu_Y ;
@@ -492,7 +505,7 @@ List inter_fe (arma::mat Y,
   } 
   else {
     /* starting value:  the OLS/LSDV estimator */
-    if (accu(abs(beta0))< 1e-10 || r==0) {  //
+    if (accu(abs(beta0))< 1e-10 || r==0 || b_r != p1 ) {  //
       beta0 = panel_beta(XX, invXX, YY, arma::zeros<arma::mat>(T,N)); //
     }
     if (r==0) {
@@ -503,7 +516,7 @@ List inter_fe (arma::mat Y,
       }
     } 
     else if (r > 0) {  
-      arma::mat invXX =  XXinv(XX) ;  // compute (X'X)^{-1}, outside beta iteration      
+      // arma::mat invXX =  XXinv(XX) ;  // compute (X'X)^{-1}, outside beta iteration      
       List out  =  beta_iter(XX, invXX, YY, r, tol, beta0) ;
       beta  = as<arma::mat>(out["beta"]) ;
       factor  =  as<arma::mat>(out["factor"]) ;
@@ -613,6 +626,7 @@ List inter_fe_ub (arma::mat Y,
                   ) {
   
   /* Dimensions */
+  int b_r = beta0.n_rows ; 
   int T = Y.n_rows ;
   int N = Y.n_cols ;
   int p = X.n_slices ;
@@ -623,7 +637,7 @@ List inter_fe_ub (arma::mat Y,
   arma::mat FE_0 ;
   //arma::mat FE(T, N, arma::fill::zeros) ;
   arma::mat VNT ;
-  arma::mat beta(p, 1, arma::fill::zeros) ; 
+  arma::mat beta ; 
   arma::mat U ;
   double mu ;
   double mu_Y ;
@@ -718,7 +732,7 @@ List inter_fe_ub (arma::mat Y,
   }
 
   /* check if XX has enough variation */
-  int p1=p; 
+  int p1 = p; 
   arma::mat X_invar(p, 1, arma::fill::zeros); // =1 if invar
 
   int j = 0;
@@ -758,7 +772,7 @@ List inter_fe_ub (arma::mat Y,
   else {
     /* starting value:  the OLS estimator */
     arma::mat invXX = XXinv(XX) ; // compute (X'X)^{-1}, outside beta iteration 
-    if (accu(abs(beta0))< 1e-10 || r==0) {  //
+    if (accu(abs(beta0))< 1e-10 || r==0 || b_r != p1) {  //
       beta0 = panel_beta(XX, invXX, YY, arma::zeros<arma::mat>(T,N)) ; //
     }
     if (r==0) {
