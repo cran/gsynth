@@ -4,12 +4,13 @@
 \description{Implements the generalized synthetic control method based
 on interactive fixed effect models.}
 \usage{gsynth(formula=NULL, data, Y, D, X = NULL, na.rm = FALSE, 
-       index, weight = NULL, force = "unit", r = 0, lambda = NULL,
-       nlambda = 10, CV = TRUE, k = 5, EM = FALSE, estimator = "ife",
+       index, weight = NULL, force = "unit", cl = NULL, r = 0, 
+       lambda = NULL, nlambda = 10, CV = TRUE, criterion = "mspe",
+       k = 5, EM = FALSE, estimator = "ife",
        se = FALSE, nboots = 200, 
        inference = "nonparametric", cov.ar = 1, parallel = TRUE, 
        cores = NULL, tol = 0.001, seed = NULL, min.T0 = 5, 
-       conf.lvl = 0.95, normalize = FALSE)  
+       alpha = 0.05, normalize = FALSE)  
 }
 \arguments{
 \item{formula}{an object of class "formula": a symbolic description of
@@ -29,6 +30,9 @@ on interactive fixed effect models.}
 \item{force}{a string indicating whether unit or time fixed effects will be
     imposed. Must be one of the following,
     "none", "unit", "time", or "two-way". The default is "unit".}
+\item{cl}{a string indicator the cluster variable. The default value is 
+  \code{NULL}. If \code{cl = NULL}, bootstrap will be blocked at unit level
+  (only for non-parametric bootstrap).}
 \item{r}{an integer specifying the number of factors. If \code{CV = TRUE}, 
   the cross validation procedure will select the optimal number of
   factors from \code{r} to 5.}
@@ -41,6 +45,11 @@ on interactive fixed effect models.}
   performed to select the optimal number of factors or hyper-parameter 
   in matrix completion algorithm. If \code{r} is not specified, the procedure
    will search through \code{r = 0} to \code{5}.}
+\item{criterion}{a string specifying the criteria used for determining the number
+  of factors. Choose from \code{c("mspe", "pc")}. "mspe" stands for the mean squared 
+  prediction error obtained through the loocv procedure, and "pc" stands for a kind 
+  of information criterion. If \code{criterion = "pc"}, the number of factors that 
+  minimize "pc" will be selected. Default is \code{criterion = "mspe"}.}
 \item{k}{a positive integer specifying cross-validation times for matrix 
  completion algorithm. Default is \code{k = 5}.}
 \item{EM}{a logical flag indicating whether an Expectation Maximization
@@ -76,8 +85,8 @@ on interactive fixed effect models.}
   larger than \code{(r.max+1)} if no individual fixed effects or \code{(r.max+2)} 
   otherwise. If there are too few pre-treatment periods among all treated units, 
   a smaller value of \code{r.max} is recommended.}
-\item{conf.lvl}{a positive number in the range of 0 and 1 specifying confidence 
- levels for uncertainty estimates. The default value is 0.95.}
+\item{alpha}{a positive number in the range of 0 and 1 specifying significant 
+ levels for uncertainty estimates. The default value is \code{alpha = 0.05}.}
 \item{normalize}{a logic flag indicating whether to scale outcome and 
   covariates. Useful for accelerating computing speed when magnitude of 
   data is large. The default is \code{normalize=FALSE}.}
@@ -109,6 +118,7 @@ on interactive fixed effect models.}
     period, and \code{4} for removed treated group units. Useful for unbalanced panel data.}
   \item{id.tr}{a vector of IDs for the treatment units.}
   \item{id.co}{a vector of IDs for the control units.}
+  \item{removed.id}{a vector of IDs for units that are removed.}
   \item{D.tr}{a matrix of treatment indicator for the treated unit outcome.}
   \item{I.tr}{a matrix of observation indicator for the treated unit outcome.}
   \item{Y.tr}{data of the treated unit outcome.}
@@ -140,6 +150,7 @@ on interactive fixed effect models.}
     interactive fixed effect model.}
   \item{sigma2}{the mean squared error of interactive fixed effect model.}
   \item{IC}{the information criterion.}
+  \item{PC}{the proposed criterion for determining factor numbers.}
   \item{est.co}{result of the interactive fixed effect model based on
     the control group data. An \code{\link{interFE}} object.}
   \item{eff.cnt}{difference between actual outcome and predicted Y(0);
@@ -164,13 +175,14 @@ on interactive fixed effect models.}
   \item{est.att.avg}{inference for \code{att.avg}.}
   \item{est.beta}{inference for \code{beta}.}
   \item{est.ind}{inference for \code{att} of each treated unit.}
+  \item{att.avg.boot}{bootstrap results for \code{att.avg}.}
   \item{att.boot}{bootstrap results for \code{att}.}
   \item{beta.boot}{bootstrap results for \code{beta}.}
 }
 \author{
-  Yiqing Xu <yiqingxu@ucsd.edu>
-
-  Licheng Liu <liulch.16@sem.tsinghua.edu.cn>
+  Yiqing Xu <yiqingxu@stanfprd.edu>, Stanford University
+  
+  Licheng Liu <liulch@mit.edu>, M.I.T.
 }
 \references{
   Laurent Gobillon and Thierry Magnac, 2016.
@@ -180,11 +192,11 @@ on interactive fixed effect models.}
 
   Yiqing Xu. 2017. "Generalized Synthetic Control Method: Causal Inference
   with Interactive Fixed Effects Models." Political Analysis, Vol. 25, 
-  Iss. 1, January 2017, pp. 57-76. Available at: \url{https://doi.org/10.1017/pan.2016.2}.
+  Iss. 1, January 2017, pp. 57-76. 
 
   Athey S, Bayati M, Doudchenko N, et al. Matrix completion methods for causal panel data models[J]. arXiv preprint arXiv:1710.10251, 2017.
   
-  For more details, see \url{http://yiqingxu.org/software/gsynth/gsynth_examples.html}.
+  For more details, see \url{https://yiqingxu.org/packages/gsynth/gsynth_examples.html}.
 
   For more details about the matrix completion method, see \url{https://github.com/susanathey/MCPanel}. 
 }
